@@ -36,6 +36,15 @@ def get_time_series_for_site(client: CogniteClient, site):
         )
         return []
 
+    # A null path means the asset hierarchy isn't contextualized yet; a Prefix
+    # filter with a null value triggers a 400 "value must not be null" from CDF.
+    if not sub_tree_root.path:
+        print(
+            f"----Root asset for {site} has no 'path'!----\n"
+            f"    Run the 'Create Cognite Asset Hierarchy' transformation to build the hierarchy!"
+        )
+        return []
+
     sub_tree_nodes = client.data_modeling.instances.list(
         instance_type=CogniteAsset,
         filter=Prefix(property=["cdf_cdm", "CogniteAsset/v1", "path"], value=sub_tree_root.path),
@@ -165,7 +174,7 @@ def handle(client: CogniteClient = None, data=None):
 
         report_ext_pipe(client, "success")
     except Exception as e:
-        # CDF requires the run message to be a string (max 1000 chars); passing the
-        # exception object directly fails JSON serialization and hides the real error.
-        report_ext_pipe(client, "fail", str(e)[:1000])
+        # CDF run status must be one of failure/success/seen, and the message must be a
+        # string (max 1000 chars); passing the exception object fails JSON serialization.
+        report_ext_pipe(client, "failure", str(e)[:1000])
         raise
