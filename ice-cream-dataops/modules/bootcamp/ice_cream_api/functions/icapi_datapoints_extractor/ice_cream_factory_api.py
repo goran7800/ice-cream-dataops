@@ -53,9 +53,14 @@ class IceCreamFactoryAPI:
                 "datapoints": [
                     # convert timestamp to ms (*1000) for CDF uploads
                     {"timestamp": dp[0] * 1000, "value": dp[1]}
+                    # CDF rejects null timestamps/values ("value must not be null")
                     for dp in dps
+                    if dp[0] is not None and dp[1] is not None
                 ]
             } for ts, dps in response_dict.items() if len(dps) > 1
         ]
+
+        # Drop timeseries left with no valid datapoints after filtering
+        response_dict = [item for item in response_dict if item["datapoints"]]
 
         return response_dict
