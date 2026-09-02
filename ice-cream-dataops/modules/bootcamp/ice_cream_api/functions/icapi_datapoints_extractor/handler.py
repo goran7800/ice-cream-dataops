@@ -165,7 +165,4 @@ def handle(client: CogniteClient = None, data=None):
 
         report_ext_pipe(client, "success")
     except Exception as e:
-        # CDF requires the run message to be a string (max 1000 chars); passing the
-        # exception object directly fails JSON serialization and hides the real error.
-        report_ext_pipe(client, "fail", str(e)[:1000])
-        raise
+        report_ext_pipe(client, "fail", e)
